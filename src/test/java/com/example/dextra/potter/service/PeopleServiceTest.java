@@ -42,8 +42,8 @@ public class PeopleServiceTest {
             peopleService.createPeople(new PeopleDTO());
         });
 
-        String expectedMessage = "Campo 'name' não pode ser null;\nCampo 'role' não pode ser null;\nCampo 'school' não pode ser null;\nCampo 'house' não pode ser null;\nCampo 'patronus' não pode ser null;\n";
-        String actualMessage = exception.getMessage();
+        var expectedMessage = "Campo 'name' não pode ser null;\nCampo 'role' não pode ser null;\nCampo 'school' não pode ser null;\nCampo 'house' não pode ser null;\nCampo 'patronus' não pode ser null;\n";
+        var actualMessage = exception.getMessage();
 
         Assertions.assertTrue(actualMessage.contains(expectedMessage));
     }
@@ -59,8 +59,8 @@ public class PeopleServiceTest {
             peopleService.createPeople(peopleDtoFake);
         });
 
-        String expectedMessage = "Não foram encontrados Casas com o ID = 1";
-        String actualMessage = exception.getMessage();
+        var expectedMessage = "Não foram encontrados Casas com o ID = 1";
+        var actualMessage = exception.getMessage();
 
         Assertions.assertTrue(actualMessage.contains(expectedMessage));
     }
@@ -103,10 +103,49 @@ public class PeopleServiceTest {
             peopleService.findPeopleById("1");
         });
 
-        String expectedMessage = "Não foram encontrados Pessoas com o ID = 1";
-        String actualMessage = exception.getMessage();
+        var expectedMessage = "Não foram encontrados Pessoas com o ID = 1";
+        var actualMessage = exception.getMessage();
 
         Assertions.assertTrue(actualMessage.contains(expectedMessage));
+    }
+
+    @DisplayName("Lança Exception buscar por ID uma pessoa com ID de house que não existe")
+    @Test
+    public void test10() {
+        Mockito.when(peopleRepository.findById(Mockito.any()))
+                .thenReturn(Optional.of(getPeopleDocumentFake()));
+        Mockito.when(harryPotterApiIntegration.findHouseByID(Mockito.any()))
+                .thenReturn(null);
+
+        Exception exception = Assertions.assertThrows(NotFoundException.class, () -> {
+            peopleService.findPeopleById("1");
+        });
+
+        var expectedMessage = "Não foram encontrados Casas com o ID = 1";
+        var actualMessage = exception.getMessage();
+
+        Assertions.assertTrue(actualMessage.contains(expectedMessage));
+    }
+
+    @DisplayName("Retorna corretamente após encontrar a pessoa")
+    @Test
+    public void test11() {
+        Mockito.when(harryPotterApiIntegration.findHouseByID(Mockito.any()))
+                .thenReturn(getHouseIntegrationDto());
+        Mockito.when(peopleRepository.findById(Mockito.any()))
+                .thenReturn(Optional.of(getPeopleDocumentFake()));
+        Mockito.when(peopleMapper.peopleDocumentToPeopleDto(Mockito.any()))
+                .thenReturn(getPeopleDtoMapperFake());
+
+        var peopleReturn = peopleService.findPeopleById("1");
+
+        Assertions.assertEquals(peopleReturn.getId(), "123");
+        Assertions.assertEquals(peopleReturn.getName(), "nome pessoa");
+        Assertions.assertEquals(peopleReturn.getRole(), "role pessoa");
+        Assertions.assertEquals(peopleReturn.getSchool(), "school pessoa");
+        Assertions.assertEquals(peopleReturn.getHouse(), "1");
+        Assertions.assertEquals(peopleReturn.getHouseName(), "house da api");
+        Assertions.assertEquals(peopleReturn.getPatronus(), "patronus pessoa");
     }
 
     @DisplayName("Lança Exception quando tentar atualizar uma pessoa que não exite")
@@ -119,8 +158,8 @@ public class PeopleServiceTest {
             peopleService.updatePeople("1", new PeopleDTO());
         });
 
-        String expectedMessage = "Não foram encontrados Pessoas com o ID = 1";
-        String actualMessage = exception.getMessage();
+        var expectedMessage = "Não foram encontrados Pessoas com o ID = 1";
+        var actualMessage = exception.getMessage();
 
         Assertions.assertTrue(actualMessage.contains(expectedMessage));
     }
@@ -135,8 +174,8 @@ public class PeopleServiceTest {
             peopleService.updatePeople("1", new PeopleDTO());
         });
 
-        String expectedMessage = "Campo 'name' não pode ser null;\nCampo 'role' não pode ser null;\nCampo 'school' não pode ser null;\nCampo 'house' não pode ser null;\nCampo 'patronus' não pode ser null;\n";
-        String actualMessage = exception.getMessage();
+        var expectedMessage = "Campo 'name' não pode ser null;\nCampo 'role' não pode ser null;\nCampo 'school' não pode ser null;\nCampo 'house' não pode ser null;\nCampo 'patronus' não pode ser null;\n";
+        var actualMessage = exception.getMessage();
 
         Assertions.assertTrue(actualMessage.contains(expectedMessage));
     }
@@ -153,8 +192,8 @@ public class PeopleServiceTest {
             peopleService.updatePeople("1", getPeopleDtoFake());
         });
 
-        String expectedMessage = "Não foram encontrados Casas com o ID = 1";
-        String actualMessage = exception.getMessage();
+        var expectedMessage = "Não foram encontrados Casas com o ID = 1";
+        var actualMessage = exception.getMessage();
 
         Assertions.assertTrue(actualMessage.contains(expectedMessage));
     }
@@ -194,8 +233,8 @@ public class PeopleServiceTest {
             peopleService.deletePeople("1");
         });
 
-        String expectedMessage = "Não foram encontrados Pessoas com o ID = 1";
-        String actualMessage = exception.getMessage();
+        var expectedMessage = "Não foram encontrados Pessoas com o ID = 1";
+        var actualMessage = exception.getMessage();
 
         Assertions.assertTrue(actualMessage.contains(expectedMessage));
     }

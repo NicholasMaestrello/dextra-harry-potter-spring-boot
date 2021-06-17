@@ -14,6 +14,11 @@ public class HarryPotterApiIntegration {
     @Value("${hp.apikey:}")
     private String apikey;
 
+    /**
+     * Busca house com base na api do potterapi e a retorna caso existe ou retorna null.
+     * @param houseId ID da house que se deseja buscar.
+     * @return house que foi encontrada ou null.
+     */
     public HouseIntegrationDTO findHouseByID(String houseId) {
         var houses = harrayPotterApiClient.getHouses(apikey);
 

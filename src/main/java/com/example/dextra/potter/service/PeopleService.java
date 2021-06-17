@@ -28,6 +28,11 @@ public class PeopleService {
     @Autowired
     private PeopleMapper peopleMapper;
 
+    /**
+     * Retorna todos as pessoas cadastradas na base de dados, com base no filtro informado.
+     * @param searchDTO objeto de filtro que contem as propriedades que podem ser informadas para servirem de filtro.
+     * @return lista de pessoas cadastradas.
+     */
     public List<PeopleDTO> listPeople(PeopleSearchDTO searchDTO) {
         List<PeopleDocument> all = peopleRepository.findAll(createSearchExample(searchDTO));
         return all.stream()
@@ -35,11 +40,25 @@ public class PeopleService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Faz a busca de uma unica pessoa com base em seu ID junto com o valor da casa a a qual ela pertence. Lança Exception caso não encontre nenhum registro para o ID.
+     * @param id ID da pessoa que se deseja procurar.
+     * @return Pessoa cadastrada na base de dados.
+     */
     public PeopleDTO findPeopleById(String id) {
-        var people = peopleRepository.findById(id).orElseThrow(() -> getNotFoundExceptionById("Pessoas", id));
-        return peopleMapper.peopleDocumentToPeopleDto(people);
+        var peopleDocument = peopleRepository.findById(id).orElseThrow(() -> getNotFoundExceptionById("Pessoas", id));
+
+        var houseByID = getHouseIntegrationDTO(peopleDocument.getHouse());
+        var peopleDTO = peopleMapper.peopleDocumentToPeopleDto(peopleDocument);
+        peopleDTO.setHouseName(houseByID.getName());
+        return peopleDTO;
     }
 
+    /**
+     * Cria uma pessoa na base de dados caso seus dados estejam corretos.
+     * @param peopleDTO Objeto com dados da pessoa que se deseja cadastrar.
+     * @return Pessoa cadastrada na base de dados com seu respectivo ID.
+     */
     public PeopleDTO createPeople(PeopleDTO peopleDTO) {
         validateDto(peopleDTO);
         var houseId = peopleDTO.getHouse();
@@ -53,6 +72,12 @@ public class PeopleService {
         return peopleDTO;
     }
 
+    /**
+     * Atualiza uma pessoa na base de dados caso ela exista e seus dados estejam corretos.
+     * @param id ID da pessoa que se deseja alterar.
+     * @param peopleDTO Objeto com dados da pessoa que se deseja alterar.
+     * @return Pessoa cadastrada na base de dados com seu respectivo ID.
+     */
     public PeopleDTO updatePeople(String id, PeopleDTO peopleDTO) {
         var peopleDocument = peopleRepository.findById(id).orElseThrow(() -> getNotFoundExceptionById("Pessoas", id));
         validateDto(peopleDTO);
@@ -66,15 +91,31 @@ public class PeopleService {
         return peopleDTO;
     }
 
+    /**
+     * Exclui pessoa da base de dados caso exista.
+     * @param id ID da pessoa que se deseja alterar.
+     * @return void.
+     */
     public void deletePeople(String id) {
         var peopleDocument = peopleRepository.findById(id).orElseThrow(() -> getNotFoundExceptionById("Pessoas", id));
         peopleRepository.delete(peopleDocument);
     }
 
+    /**
+     * Cria uma nova NotFoundException formatada com campo e ID.
+     * @param entity nome do campo ou propriedade que se deseja exibir.
+     * @param id ID que se deseja exibir.
+     * @return NotFoundException com mensagem formatada.
+     */
     private NotFoundException getNotFoundExceptionById(String entity, String id) {
         return new NotFoundException(String.format("Não foram encontrados %s com o ID = %s", entity, id));
     }
 
+    /**
+     * Obtem house com base em ID e lança NotFoundException caso não encontre nenhuma.
+     * @param houseId ID da house que se deseja buscar.
+     * @return house que foi encontrada.
+     */
     private HouseIntegrationDTO getHouseIntegrationDTO(String houseId) {
         var houseByID = harryPotterApiIntegration.findHouseByID(houseId);
         if (houseByID == null) {
@@ -83,6 +124,11 @@ public class PeopleService {
         return houseByID;
     }
 
+    /**
+     * Cria instancia de example faz o set de valor de forma dinamica com base no que foi passado no search.
+     * @param searchDTO objeto com propriedade que se deseja fazer filtro.
+     * @return example com ou sem as propriedades.
+     */
     private Example<PeopleDocument> createSearchExample(PeopleSearchDTO searchDTO) {
         var peopleDocument = new PeopleDocument();
         if (searchDTO.getName() != null) {
@@ -103,6 +149,12 @@ public class PeopleService {
         return Example.of(peopleDocument);
     }
 
+    /**
+     * Faz o set de propriedades que podem ser atualizadas no document.
+     * @param peopleDocument base que vai servir para ser atualizado.
+     * @param peopleDTO dto com as propriedades que vao sobreescrever o document.
+     * @return document com propriedades atualizadas.
+     */
     private PeopleDocument setUpdateFields(PeopleDocument peopleDocument, PeopleDTO peopleDTO) {
         peopleDocument.setName(peopleDTO.getName());
         peopleDocument.setRole(peopleDTO.getRole());
@@ -112,6 +164,11 @@ public class PeopleService {
         return peopleDocument;
     }
 
+    /**
+     * Valida se os campos obrigatorios da pessoa foram informados. Caso algum não tenha sido informado lança InvalidOperationException.
+     * @param peopleDTO dto com as propriedades que vão ser validadas.
+     * @return void.
+     */
     private void validateDto(PeopleDTO peopleDTO) {
         var error = new StringBuilder();
         ;
